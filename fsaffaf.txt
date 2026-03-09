@@ -1,0 +1,163 @@
+[STREAM_FAILED] Query [id = b458cdd0-683f-4b6a-a651-444ac935ed17, runId = 2fef7712-ac93-4e6e-af0f-d7d93c901db7] terminated with exception: [FOREACH_BATCH_USER_FUNCTION_ERROR] An error occurred in the user provided function in foreach batch sink. Reason: An exception was raised by the Python Proxy. Return Message: Traceback (most recent call last):
+  File "/databricks/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 642, in _call_proxy
+    return_value = getattr(self.pool[obj_id], method)(*params)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/utils.py", line 132, in call
+    raise e
+  File "/databricks/spark/python/pyspark/sql/utils.py", line 129, in call
+    self.func(DataFrame(jdf, wrapped_session_jdf), batch_id)
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 445, in <lambda>
+    lambda batch_df, batch_id: process_microbatch(
+                               ^^^^^^^^^^^^^^^^^^^
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 380, in process_microbatch
+    timings_ms = process_batch(
+                 ^^^^^^^^^^^^^^
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 319, in process_batch
+    _merge_index_table(spark, index_table, view_name)
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 139, in _merge_index_table
+    spark.sql(
+  File "/databricks/spark/python/pyspark/instrumentation_utils.py", line 47, in wrapper
+    res = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/session.py", line 1830, in sql
+    return DataFrame(self._jsparkSession.sql(sqlQuery, litArgs), self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1355, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/errors/exceptions/captured.py", line 261, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.UnsupportedOperationException: [DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE] Cannot perform Merge as multiple source rows matched and attempted to modify the same
+target row in the Delta table in possibly conflicting ways. By SQL semantics of Merge,
+when multiple source rows match on the same target row, the result may be ambiguous
+as it is unclear which source row should be used to update or delete the matching
+target row. You can preprocess the source table to eliminate the possibility of
+multiple matches. Please refer to
+https://docs.databricks.com/delta/merge.html#merge-error
+ SQLSTATE: 39000 SQLSTATE: XXKST
+---------------------------------------------------------------------------
+StreamingQueryException                   Traceback (most recent call last)
+File ~/.ipykernel/1995/command--1-1959567046:8
+      5 del sys
+      7 with open(filename, "rb") as f:
+----> 8   exec(compile(f.read(), filename, 'exec'))
+
+File /Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py:463
+    442     (
+    443         trace_stream.writeStream
+    444         .foreachBatch(
+   (...)
+    458         .awaitTermination()
+    459     )
+    462 if __name__ == "__main__":
+--> 463     main()
+
+File /Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py:458, in main()
+    439 checkpoint_location = _checkpoint_location(args.checkpoint, args.query_version)
+    440 print(f"Using checkpointLocation={checkpoint_location}")
+    442 (
+    443     trace_stream.writeStream
+    444     .foreachBatch(
+    445         lambda batch_df, batch_id: process_microbatch(
+    446             spark=spark,
+    447             batch_df=batch_df,
+    448             batch_id=batch_id,
+    449             feedback_table=args.feedback_table,
+    450             index_table=args.index_table,
+    451             lookback_hours=args.reconcile_lookback_hours,
+    452             max_rows=args.reconcile_max_rows,
+    453         )
+    454     )
+    455     .option("checkpointLocation", checkpoint_location)
+    456     .trigger(processingTime=f"{args.trigger_seconds} seconds")
+    457     .start()
+--> 458     .awaitTermination()
+    459 )
+
+File /databricks/spark/python/pyspark/sql/streaming/query.py:222, in StreamingQuery.awaitTermination(self, timeout)
+    220     return self._jsq.awaitTermination(int(timeout * 1000))
+    221 else:
+--> 222     return self._jsq.awaitTermination()
+
+File /databricks/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py:1355, in JavaMember.__call__(self, *args)
+   1349 command = proto.CALL_COMMAND_NAME +\
+   1350     self.command_header +\
+   1351     args_command +\
+   1352     proto.END_COMMAND_PART
+   1354 answer = self.gateway_client.send_command(command)
+-> 1355 return_value = get_return_value(
+   1356     answer, self.gateway_client, self.target_id, self.name)
+   1358 for temp_arg in temp_args:
+   1359     if hasattr(temp_arg, "_detach"):
+
+File /databricks/spark/python/pyspark/errors/exceptions/captured.py:261, in capture_sql_exception.<locals>.deco(*a, **kw)
+    257 converted = convert_exception(e.java_exception)
+    258 if not isinstance(converted, UnknownException):
+    259     # Hide where the exception came from that shows a non-Pythonic
+    260     # JVM exception message.
+--> 261     raise converted from None
+    262 else:
+    263     raise
+
+StreamingQueryException: [STREAM_FAILED] Query [id = b458cdd0-683f-4b6a-a651-444ac935ed17, runId = 2fef7712-ac93-4e6e-af0f-d7d93c901db7] terminated with exception: [FOREACH_BATCH_USER_FUNCTION_ERROR] An error occurred in the user provided function in foreach batch sink. Reason: An exception was raised by the Python Proxy. Return Message: Traceback (most recent call last):
+  File "/databricks/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/clientserver.py", line 642, in _call_proxy
+    return_value = getattr(self.pool[obj_id], method)(*params)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/utils.py", line 132, in call
+    raise e
+  File "/databricks/spark/python/pyspark/sql/utils.py", line 129, in call
+    self.func(DataFrame(jdf, wrapped_session_jdf), batch_id)
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 445, in <lambda>
+    lambda batch_df, batch_id: process_microbatch(
+                               ^^^^^^^^^^^^^^^^^^^
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 380, in process_microbatch
+    timings_ms = process_batch(
+                 ^^^^^^^^^^^^^^
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 319, in process_batch
+    _merge_index_table(spark, index_table, view_name)
+  File "/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py", line 139, in _merge_index_table
+    spark.sql(
+  File "/databricks/spark/python/pyspark/instrumentation_utils.py", line 47, in wrapper
+    res = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/session.py", line 1830, in sql
+    return DataFrame(self._jsparkSession.sql(sqlQuery, litArgs), self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1355, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/errors/exceptions/captured.py", line 261, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.UnsupportedOperationException: [DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE] Cannot perform Merge as multiple source rows matched and attempted to modify the same
+target row in the Delta table in possibly conflicting ways. By SQL semantics of Merge,
+when multiple source rows match on the same target row, the result may be ambiguous
+as it is unclear which source row should be used to update or delete the matching
+target row. You can preprocess the source table to eliminate the possibility of
+multiple matches. Please refer to
+https://docs.databricks.com/delta/merge.html#merge-error
+ SQLSTATE: 39000 SQLSTATE: XXKST
+=== Streaming Query ===
+Identifier: [id = b458cdd0-683f-4b6a-a651-444ac935ed17, runId = 2fef7712-ac93-4e6e-af0f-d7d93c901db7]
+Current Start Offsets: {DeltaSource[s3://llm-sandbox-databricks-unity/__unitystorage/catalogs/9ddbea7b-f5f6-48c4-8314-d7b4c6b95b42/tables/339e7ed0-0b71-415b-a15f-2ce0984de97a]: {"sourceVersion":1,"reservoirId":"04d0fff5-a5d5-4cd6-b5ae-3a4ce7ace55f","reservoirVersion":43636,"index":-1,"isStartingVersion":false}}
+Current End Offsets: {DeltaSource[s3://llm-sandbox-databricks-unity/__unitystorage/catalogs/9ddbea7b-f5f6-48c4-8314-d7b4c6b95b42/tables/339e7ed0-0b71-415b-a15f-2ce0984de97a]: {"sourceVersion":1,"reservoirId":"04d0fff5-a5d5-4cd6-b5ae-3a4ce7ace55f","reservoirVersion":43640,"index":-1,"isStartingVersion":false}}
+
+Current State: ACTIVE
+Thread State: RUNNABLE
+
+Logical Plan:
+~WriteToMicroBatchDataSourceV1 ForeachBatchSink, b458cdd0-683f-4b6a-a651-444ac935ed17, [checkpointLocation=dbfs:/tmp/feedback-linking-stream-v3/stream_query_no_stateful_ops_v1], Append
++- ~Filter isnotnull(trace_id#2441)
+   +- ~Project [trace_id#2413 AS trace_id#2441, coalesce(tags#2423[tracking_id], trace_metadata#2422[tracking_id]) AS tracking_id#2442, request_time#2415 AS request_time#2443]
+      +- ~StreamingExecutionRelation DeltaSource[s3://llm-sandbox-databricks-unity/__unitystorage/catalogs/9ddbea7b-f5f6-48c4-8314-d7b4c6b95b42/tables/339e7ed0-0b71-415b-a15f-2ce0984de97a], [trace_id#2413, client_request_id#2414, request_time#2415, state#2416, execution_duration_ms#2417L, request#2418, response#2419, request_preview#2420, response_preview#2421, trace_metadata#2422, tags#2423, trace_location#2424, assessments#2425, spans#2426], `llm_sandbox`.`inference_tables`.`trace_logs_2024551179173857`
+
+Workload failed, see run output for details
+Using checkpointLocation=dbfs:/tmp/feedback-linking-stream-v3/stream_query_no_stateful_ops_v1
+
+
+{"event": "microbatch_start", "batch_id": 36, "input_row_count": 519}
+
+Using checkpointLocation=dbfs:/tmp/feedback-linking-stream-v3/stream_query_no_stateful_ops_v1
+
+
+{"event": "microbatch_start", "batch_id": 36, "input_row_count": 519}
+{"event": "microbatch_failed", "batch_id": 36, "input_row_count": 519, "elapsed_ms": 2411, "error": "[DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE] Cannot perform Merge as multiple source rows matched and attempted to modify the same\ntarget row in the Delta table in possibly conflicting ways. By SQL semantics of Merge,\nwhen multiple source rows match on the same target row, the result may be ambiguous\nas it is unclear which source row should be used to update or delete the matching\ntarget row. You can preprocess the source table to eliminate the possibility of\nmultiple matches. Please refer to\nhttps://docs.databricks.com/delta/merge.html#merge-error", "traceback": "Traceback (most recent call last):\n  File \"/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py\", line 380, in process_microbatch\n    timings_ms = process_batch(\n                 ^^^^^^^^^^^^^^\n  File \"/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py\", line 319, in process_batch\n    _merge_index_table(spark, index_table, view_name)\n  File \"/Workspace/Users/e711c08e-4933-4a4a-994a-5f8ee89db6bc/.bundle/feedback-loop/prod/files/scripts/stream_linking.py\", line 139, in _merge_index_table\n    spark.sql(\n  File \"/databricks/spark/python/pyspark/instrumentation_utils.py\", line 47, in wrapper\n    res = func(*args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^\n  File \"/databricks/spark/python/pyspark/sql/session.py\", line 1830, in sql\n    return DataFrame(self._jsparkSession.sql(sqlQuery, litArgs), self)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/databricks/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py\", line 1355, in __call__\n    return_value = get_return_value(\n                   ^^^^^^^^^^^^^^^^^\n  File \"/databricks/spark/python/pyspark/errors/exceptions/captured.py\", line 261, in deco\n    raise converted from None\npyspark.errors.exceptions.captured.UnsupportedOperationException: [DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE] Cannot perform Merge as multiple source rows matched and attempted to modify the same\ntarget row in the Delta table in possibly conflicting ways. By SQL semantics of Merge,\nwhen multiple source rows match on the same target row, the result may be ambiguous\nas it is unclear which source row should be used to update or delete the matching\ntarget row. You can preprocess the source table to eliminate the possibility of\nmultiple matches. Please refer to\nhttps://docs.databricks.com/delta/merge.html#merge-error\n"}
